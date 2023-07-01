@@ -29,6 +29,10 @@ type ServerMemberSummary struct {
 	RoleIds []int `json:"roleIds"`
 }
 
+type ServerMemberPermissions struct {
+	Permissions []string `json:"permissions"`
+}
+
 type User struct {
 	// The ID of the user
 	Id string `json:"id"`
@@ -118,14 +122,14 @@ type membersService struct {
 
 var _ MembersService = &membersService{}
 
-func (ms *membersService) UpdateMemberNickname(userId string, nickname string) (*NicknameResponse, error) {
-	endpoint := ms.endpoints.Nickname(ms.client.ServerID, userId)
+func (service *membersService) UpdateMemberNickname(userId string, nickname string) (*NicknameResponse, error) {
+	endpoint := service.endpoints.Nickname(service.client.ServerID, userId)
 
 	body := &NicknameResponse{
 		Nickname: nickname,
 	}
 
-	resp, err := ms.client.PutRequest(endpoint, body)
+	resp, err := service.client.PutRequest(endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +144,10 @@ func (ms *membersService) UpdateMemberNickname(userId string, nickname string) (
 	return &nick, nil
 }
 
-func (ms *membersService) DeleteMemberNickname(userId string) error {
-	endpoint := ms.endpoints.Nickname(ms.client.ServerID, userId)
+func (service *membersService) DeleteMemberNickname(userId string) error {
+	endpoint := service.endpoints.Nickname(service.client.ServerID, userId)
 
-	_, err := ms.client.DeleteRequest(endpoint)
+	_, err := service.client.DeleteRequest(endpoint)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to delete member nickname. Error: %s", err.Error()))
 	}
@@ -151,11 +155,11 @@ func (ms *membersService) DeleteMemberNickname(userId string) error {
 	return nil
 }
 
-func (ms *membersService) GetServerMember(serverId string, userId string) (*ServerMember, error) {
-	endpoint := ms.endpoints.Ban(serverId, userId)
+func (service *membersService) GetServerMember(serverId string, userId string) (*ServerMember, error) {
+	endpoint := service.endpoints.GetMember(serverId, userId)
 
 	var member ServerMemberResponse
-	err := ms.client.GetRequestV2(endpoint, &member)
+	err := service.client.GetRequestV2(endpoint, &member)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, errors.New(fmt.Sprintf("Failed to get member. Error: %s", err.Error()))
@@ -164,10 +168,10 @@ func (ms *membersService) GetServerMember(serverId string, userId string) (*Serv
 	return &member.Member, nil
 }
 
-func (ms *membersService) KickMember(userId string) error {
-	endpoint := ms.endpoints.GetMember(ms.client.ServerID, userId)
+func (service *membersService) KickMember(userId string) error {
+	endpoint := service.endpoints.GetMember(service.client.ServerID, userId)
 
-	_, err := ms.client.DeleteRequest(endpoint)
+	_, err := service.client.DeleteRequest(endpoint)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to kick member. Error: %s", err.Error()))
 	}
@@ -175,8 +179,8 @@ func (ms *membersService) KickMember(userId string) error {
 	return nil
 }
 
-func (ms *membersService) BanMember(userId string, reason string) (*ServerMemberBan, error) {
-	endpoint := ms.endpoints.Ban(ms.client.ServerID, userId)
+func (service *membersService) BanMember(userId string, reason string) (*ServerMemberBan, error) {
+	endpoint := service.endpoints.Ban(service.client.ServerID, userId)
 
 	// No need to build a struct here
 	body := map[string]string{
@@ -184,7 +188,7 @@ func (ms *membersService) BanMember(userId string, reason string) (*ServerMember
 	}
 
 	var ban ServerMemberBan
-	err := ms.client.PostRequestV2(endpoint, body, &ban)
+	err := service.client.PostRequestV2(endpoint, body, &ban)
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +196,12 @@ func (ms *membersService) BanMember(userId string, reason string) (*ServerMember
 	return &ban, nil
 }
 
-func (ms *membersService) IsMemberBanned(userId string) (*ServerMemberBan, error) {
+func (service *membersService) IsMemberBanned(userId string) (*ServerMemberBan, error) {
 	// Do we want to use the serverID from the config, or manually input it?
-	endpoint := ms.endpoints.Ban(ms.client.ServerID, userId)
+	endpoint := service.endpoints.Ban(service.client.ServerID, userId)
 
 	var ban ServerMemberBan
-	err := ms.client.GetRequestV2(endpoint, &ban)
+	err := service.client.GetRequestV2(endpoint, &ban)
 	if err != nil {
 		return nil, err
 	}
@@ -205,10 +209,10 @@ func (ms *membersService) IsMemberBanned(userId string) (*ServerMemberBan, error
 	return &ban, nil
 }
 
-func (ms *membersService) UnbanMember(userId string) error {
-	endpoint := ms.endpoints.Ban(ms.client.ServerID, userId)
+func (service *membersService) UnbanMember(userId string) error {
+	endpoint := service.endpoints.Ban(service.client.ServerID, userId)
 
-	_, err := ms.client.DeleteRequest(endpoint)
+	_, err := service.client.DeleteRequest(endpoint)
 	if err != nil {
 		log.Fatalln(err.Error())
 		return err
@@ -217,11 +221,11 @@ func (ms *membersService) UnbanMember(userId string) error {
 	return nil
 }
 
-func (ms *membersService) GetServerMembers() (*[]ServerMemberSummary, error) {
-	endpoint := ms.endpoints.GetMembers(ms.client.ServerID)
+func (service *membersService) GetServerMembers() (*[]ServerMemberSummary, error) {
+	endpoint := service.endpoints.GetMembers(service.client.ServerID)
 
 	var members []ServerMemberSummary
-	err := ms.client.GetRequestV2(endpoint, &members)
+	err := service.client.GetRequestV2(endpoint, &members)
 	if err != nil {
 		return nil, err
 	}

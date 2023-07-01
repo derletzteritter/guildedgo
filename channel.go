@@ -60,7 +60,7 @@ const (
 
 type Mentions struct {
 	// Info on mentioned users (min items 1)
-	Users MentionsUser `json:"users,omitempty"`
+	Users []MentionsUser `json:"users,omitempty"`
 
 	// Info on mentioned channels (min items 1)
 	Channels []MentionsChannel `json:"channels,omitempty"`
