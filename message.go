@@ -10,7 +10,8 @@ type ChatMessage struct {
 	Type string `json:"type,omitempty"`
 
 	// The ID of the server
-	ServerID string `json:"serverId"`
+	ServerID string `json:"serverId,omitempty"`
+	GroupID  string `json:"groupId,omitempty"`
 
 	// The ID of the channel
 	ChannelID string `json:"channelId"`
@@ -44,11 +45,16 @@ type ChatMessage struct {
 	CreatedBy string `json:"createdBy"`
 
 	// The ID of the webhook who created this message, if was created by a webhook
-	CreatedByWebhookId string `json:"createdByWebhookId"`
+	CreatedByWebhookId string `json:"createdByWebhookId,omitempty"`
 
 	// The IOSO 8601 timestamp that the message was updated at, if relevant
-	UpdatedAt string `json:"updatedAt"`
+	UpdatedAt string `json:"updatedAt,omitempty"`
 }
+
+const (
+	ChatMessageTypeDefault string = "default"
+	ChatMessageTypeSystem  string = "system"
+)
 
 // ChatEmbed are rich content sections optionally associated with chat messages.
 // Properties with "webhook-markdown" support allow for the following: link, italic,
@@ -122,15 +128,15 @@ type ChatEmbedField struct {
 	Value string `json:"value"`
 
 	// If the field should wrap or not (default false)
-	Inline bool `json:"inline"`
+	Inline bool `json:"inline,omitempty"`
 }
 
 type MessageObject struct {
 	// If set, this message will only be seen by those mentioned or replied to
-	IsPrivate string `json:"isPrivate,omitempty"`
+	IsPrivate bool `json:"isPrivate,omitempty"`
 
 	// If set, this message will not notify any mentioned users or roles (default false)
-	IsSilent string `json:"isSilent,omitempty"`
+	IsSilent bool `json:"isSilent,omitempty"`
 
 	// Message IDs to reply to (min items 1; max items 5)
 	ReplyMessageIds []string `json:"replyMessageIds,omitempty"`

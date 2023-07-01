@@ -17,12 +17,5 @@ func TestNewClient(t *testing.T) {
 
 	c := NewClient(config)
 
-	_, err := c.Channel.UpdateChannel("what", &UpdateChannelObject{
-		Name: "whehe",
-	})
-	if err != nil {
-		c.Channel.SendMessage("", &MessageObject{
-			Content: "Failed to update channel",
-		})
-	}
+	c.Channel.CreateChannel(&NewChannelObject{})
 }

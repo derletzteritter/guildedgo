@@ -4,23 +4,59 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
 )
 
 type ServerChannel struct {
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	Topic      string `json:"topic"`
-	CreatedAt  string `json:"createdAt"`
-	UpdatedAt  string `json:"updatedAt"`
-	ServerID   string `json:"serverId"`
-	ParentID   string `json:"parentId"`
-	CategoryID string `json:"categoryId"`
+	ID string `json:"id"`
+
+	// The type of channel. This will determine what routes to use for creating content in a channel.
+	// For example, if this "chat", then one must use the routes for creating channel messages
+	Type string `json:"type"`
+
+	Name string `json:"name"`
+
+	// The topic of the channel. Not applicable to threads (min length 1; max length 512)
+	Topic string `json:"topic,omitempty"`
+
+	CreatedAt string `json:"createdAt"`
+	CreatedBy string `json:"createdBy"`
+	UpdatedAt string `json:"updatedAt,omitempty"`
+	ServerID  string `json:"serverId"`
+
+	// ID of the root channel or thread in the channel hierarchy.
+	// Only applicable to "chat", "voice", and "stream" channels and indicates that this channel is a thread, if present
+	RootID string `json:"rootId,omitempty"`
+
+	// ID of the immediate parent channel or thread in the channel hierarchy.
+	// Only applicable to "chat", "voice", and "stream" channels and indicates that this channel is a thread, if present
+	ParentID string `json:"parentId,omitempty"`
+
+	// The ID of the message that this channel was created off of.
+	// Only applicable to "chat", "voice", and "stream" channels and indicates that this channel is a thread, if present
+	MessageID string `json:"messageId,omitempty"`
+
+	// The category that the channel exists in. Only relevant for server channels
+	CategoryID int    `json:"categoryId,omitempty"`
 	GroupID    string `json:"groupId"`
-	IsPublic   bool   `json:"isPublic"`
-	ArchivedBy string `json:"archivedBy"`
-	ArchivedAt string `json:"archivedAt"`
+	IsPublic   bool   `json:"isPublic,omitempty"`
+	ArchivedBy string `json:"archivedBy,omitempty"`
+	ArchivedAt string `json:"archivedAt,omitempty"`
 }
+
+const (
+	ChannelTypeAnnouncements string = "announcements"
+	ChannelTypeChat          string = "chat"
+	ChannelTypeCalendar      string = "calendar"
+	ChannelTypeForums        string = "forums"
+	ChannelTypeMedia         string = "media"
+	ChannelTypeDocs          string = "docs"
+	ChannelTypeVoice         string = "voice"
+	ChannelTypeList          string = "list"
+	ChannelTypeScheduling    string = "scheduling"
+	ChannelTypeStream        string = "stream"
+)
 
 type Mentions struct {
 	// Info on mentioned users (min items 1)
@@ -61,13 +97,15 @@ type NewChannelObject struct {
 	Type       string `json:"type"`
 	ServerID   string `json:"serverId,omitempty"`
 	GroupID    string `json:"groupId,omitempty"`
-	CategoryID string `json:"categoryId,omitempty"`
+	CategoryID int    `json:"categoryId,omitempty"`
+	ParentID   string `json:"parentId,omitempty"`
+	MessageID  string `json:"messageId,omitempty"`
 }
 
 type UpdateChannelObject struct {
 	Name     string `json:"name,omitempty"`
 	Topic    string `json:"topic,omitempty"`
-	IsPublic string `json:"isTopic,omitempty"`
+	IsPublic bool   `json:"isPublic,omitempty"`
 }
 
 type ServerChannelResponse struct {
@@ -117,12 +155,12 @@ var _ ChannelService = &channelService{}
 
 // CreateChannel returns the newly created channel.
 // Only server channels are supported at this time (coming soon™: DM Channels!)
-func (cs *channelService) CreateChannel(channelObject *NewChannelObject) (*ServerChannel, error) {
-	endpoint := cs.endpoints.Default()
+func (service *channelService) CreateChannel(channelObject *NewChannelObject) (*ServerChannel, error) {
+	endpoint := service.endpoints.Default()
 
-	channelObject.ServerID = cs.client.ServerID
+	channelObject.ServerID = service.client.ServerID
 
-	resp, err := cs.client.PostRequest(endpoint, &channelObject)
+	resp, err := service.client.PostRequest(endpoint, &channelObject)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to create new channel. Error: \n%v", err.Error()))
 	}
@@ -138,11 +176,11 @@ func (cs *channelService) CreateChannel(channelObject *NewChannelObject) (*Serve
 
 // GetChannel returns a channel by channelId.
 // Only server channels are supported at this time (coming soon™: DM Channels!)
-func (cs *channelService) GetChannel(channelId string) (*ServerChannel, error) {
-	endpoint := cs.endpoints.Get(channelId)
+func (service *channelService) GetChannel(channelId string) (*ServerChannel, error) {
+	endpoint := service.endpoints.Get(channelId)
 
 	var serverChannel ServerChannelResponse
-	err := cs.client.GetRequestV2(endpoint, &serverChannel)
+	err := service.client.GetRequestV2(endpoint, &serverChannel)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to get channel. Error: \n%v", err.Error()))
 	}
@@ -151,11 +189,11 @@ func (cs *channelService) GetChannel(channelId string) (*ServerChannel, error) {
 }
 
 // UpdateChannel returns the updated channel.
-func (cs *channelService) UpdateChannel(channelId string, channelObject *UpdateChannelObject) (*ServerChannel, error) {
-	endpoint := cs.endpoints.Get(channelId)
+func (service *channelService) UpdateChannel(channelId string, channelObject *UpdateChannelObject) (*ServerChannel, error) {
+	endpoint := service.endpoints.Get(channelId)
 
 	var serverChannel ServerChannelResponse
-	err := cs.client.PatchRequest(endpoint, &channelObject, &serverChannel)
+	err := service.client.PatchRequest(endpoint, &channelObject, &serverChannel)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to update  channel. Error: \n%v", err.Error()))
 	}
@@ -175,10 +213,10 @@ func (cs *channelService) DeleteChannel(channelId string) error {
 	return nil
 }
 
-func (cs *channelService) SendMessage(channelId string, message *MessageObject) (*ChatMessage, error) {
-	endpoint := cs.endpoints.Message(channelId)
+func (service *channelService) SendMessage(channelId string, message *MessageObject) (*ChatMessage, error) {
+	endpoint := service.endpoints.Message(channelId)
 
-	resp, err := cs.client.PostRequest(endpoint, &message)
+	resp, err := service.client.PostRequest(endpoint, &message)
 	if err != nil {
 		return nil, err
 	}
@@ -192,10 +230,12 @@ func (cs *channelService) SendMessage(channelId string, message *MessageObject) 
 	return &msg.Message, err
 }
 
-func (cs *channelService) UpdateChannelMessage(channelId string, messageId string, newMessage *MessageObject) (*ChatMessage, error) {
-	endpoint := cs.endpoints.MessageID(channelId, messageId)
+// TODO: only allow for content and embed updates
 
-	resp, err := cs.client.PutRequest(endpoint, &newMessage)
+func (service *channelService) UpdateChannelMessage(channelId string, messageId string, newMessage *MessageObject) (*ChatMessage, error) {
+	endpoint := service.endpoints.MessageID(channelId, messageId)
+
+	resp, err := service.client.PutRequest(endpoint, &newMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -210,17 +250,33 @@ func (cs *channelService) UpdateChannelMessage(channelId string, messageId strin
 }
 
 // GetMessages TODO: add support for params
-func (cs *channelService) GetMessages(channelId string, getObject *GetMessagesObject) (*[]ChatMessage, error) {
-	endpoint := cs.endpoints.ChannelMessages(channelId)
+func (service *channelService) GetMessages(channelId string, getObject *GetMessagesObject) (*[]ChatMessage, error) {
+	endpoint := service.endpoints.ChannelMessages(channelId)
 
-	resp, err := cs.client.GetRequest(endpoint)
-	if err != nil {
-		return nil, err
+	// create query params with getObject
+	params := url.Values{}
+
+	if getObject != nil {
+		if getObject.Before != "" {
+			params.Add("before", getObject.Before)
+		}
+		if getObject.After != "" {
+			params.Add("after", getObject.After)
+		}
+
+		if getObject.Limit != 0 {
+			params.Add("limit", strconv.Itoa(getObject.Limit))
+		}
+
+		if getObject.IncludePrivate {
+			params.Add("includePrivate", strconv.FormatBool(getObject.IncludePrivate))
+		}
 	}
 
-	// Abstract this functionality in GetRequest, as for the rest below and above
+	endpoint = endpoint + "?" + params.Encode()
+
 	var msgs AllMessagesResponse
-	err = json.Unmarshal(resp, &msgs)
+	err := service.client.GetRequestV2(endpoint, &msgs)
 	if err != nil {
 		return nil, err
 	}
@@ -229,10 +285,10 @@ func (cs *channelService) GetMessages(channelId string, getObject *GetMessagesOb
 }
 
 // GetMessage Get a message from a channel
-func (cs *channelService) GetMessage(channelId string, messageId string) (*ChatMessage, error) {
-	endpoint := cs.endpoints.MessageID(channelId, messageId)
+func (service *channelService) GetMessage(channelId string, messageId string) (*ChatMessage, error) {
+	endpoint := service.endpoints.MessageID(channelId, messageId)
 
-	resp, err := cs.client.GetRequest(endpoint)
+	resp, err := service.client.GetRequest(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -246,10 +302,10 @@ func (cs *channelService) GetMessage(channelId string, messageId string) (*ChatM
 	return &msg.Message, nil
 }
 
-func (cs *channelService) DeleteChannelMessage(channelId string, messageId string) error {
-	endpoint := cs.endpoints.MessageID(channelId, messageId)
+func (service *channelService) DeleteChannelMessage(channelId string, messageId string) error {
+	endpoint := service.endpoints.MessageID(channelId, messageId)
 
-	_, err := cs.client.DeleteRequest(endpoint)
+	_, err := service.client.DeleteRequest(endpoint)
 	if err != nil {
 		return err
 	}
