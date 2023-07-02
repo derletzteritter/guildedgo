@@ -25,6 +25,7 @@ type Client struct {
 	DocComments    DocCommentService
 	Docs           DocsService
 	Socials        SocialsService
+	Announcements  AnnouncementService
 
 	events   map[string][]Event
 	commands map[string]Command
@@ -61,6 +62,7 @@ func NewClient(config *Config) *Client {
 	c.Docs = &docsService{client: c}
 	c.DocComments = &docCommentService{client: c}
 	c.Socials = &socialsService{client: c}
+	c.Announcements = &announcementService{client: c}
 
 	c.events = make(map[string][]Event)
 
