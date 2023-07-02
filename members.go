@@ -33,38 +33,6 @@ type ServerMemberPermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
-type User struct {
-	// The ID of the user
-	Id string `json:"id"`
-
-	// The type of user. If this property is absent, it can assumed to be of type user
-	Type string `json:"type,omitempty"`
-
-	Name string `json:"name"`
-
-	// The avatar image associated with the user
-	Avatar string `json:"avatar,omitempty"`
-
-	// The banner image associated with the user
-	Banner string `json:"banner,omitempty"`
-
-	// The ISO 8601 timestamp that the user was created at
-	CreatedAt string `json:"createdAt"`
-}
-
-type UserSummary struct {
-	// The ID of the user
-	Id string `json:"id"`
-
-	//  The type of user. If this property is absent, it can assumed to be of type user
-	Type string `json:"type,omitempty"`
-
-	Name string `json:"name"`
-
-	// The avatar image associated with the user
-	Avatar string `json:"avatar,omitempty"`
-}
-
 type ServerMemberBan struct {
 	User UserSummary `json:"user"`
 

@@ -17,8 +17,5 @@ func TestNewClient(t *testing.T) {
 
 	c := NewClient(config)
 
-	c.Announcements.GetAnnouncements("123", &GetAnnouncementParams{
-		Before: "123",
-		Limit:  1,
-	})
+	c.Users.GetUser("me")
 }
