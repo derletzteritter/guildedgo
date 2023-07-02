@@ -5,7 +5,7 @@ A guilded.gg library in Go
 ## Getting started
 
 ```cmd
-go get -u github.com/itschip/guildedgo
+go get github.com/itschip/guildedgo
 ```
 
 ## Examples
