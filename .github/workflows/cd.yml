@@ -1,10 +1,5 @@
 name: "Continuous delivery"
 
-on:
-  push:
-    tags:
-      - "v*"
-
 jobs:
   release:
     name: "Release"
