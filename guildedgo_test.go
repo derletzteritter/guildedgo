@@ -17,5 +17,7 @@ func TestNewClient(t *testing.T) {
 
 	c := NewClient(config)
 
-	c.Users.GetUser("me")
+	c.Open()
+
+	c.Close()
 }

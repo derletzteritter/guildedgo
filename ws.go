@@ -26,18 +26,20 @@ func (c *Client) Open() {
 	signal.Notify(interrupt, os.Interrupt)
 
 	conn, _, err := websocket.DefaultDialer.Dial("wss://www.guilded.gg/websocket/v1", header)
+	c.conn = conn
+
 	if err != nil {
 		log.Fatalln("Failed to connect to websocket: ", err.Error())
 	}
 
 	defer func() {
-		err := conn.Close()
+		err := c.conn.Close()
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
 	}()
 
-	_, m, err := conn.ReadMessage()
+	_, m, err := c.conn.ReadMessage()
 	if err != nil {
 		log.Fatalln("Failed to read message: ", err.Error())
 	}
@@ -69,14 +71,15 @@ func (c *Client) Open() {
 			return
 
 		case t := <-ticker.C:
-			err := conn.WriteMessage(websocket.TextMessage, []byte(t.String()))
+			err := c.conn.WriteMessage(websocket.TextMessage, []byte(t.String()))
 			if err != nil {
 				return
 			}
+
 		case <-interrupt:
 			log.Println("Interrupt")
 
-			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				return
 			}
@@ -88,6 +91,42 @@ func (c *Client) Open() {
 
 			return
 		}
+	}
+}
+
+func (c *Client) Close() {
+	c.events = make(map[string][]Event) // Clear registered event callbacks
+
+	// Close the WebSocket connection
+	if c.conn != nil {
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, os.Interrupt)
+
+		err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		if err != nil {
+			log.Println("Failed to send close message:", err.Error())
+		}
+
+		select {
+		case <-interrupt:
+			// Received interrupt signal, handle it gracefully
+			log.Println("Interrupt signal received while closing the connection.")
+
+			err := c.conn.Close()
+			if err != nil {
+				log.Println("Failed to close WebSocket connection:", err.Error())
+			}
+			case <-time.After(time.Second):
+				// Timeout for graceful termination reached, force close the connection
+				log.Println("Timeout reached for graceful termination. Forcing connection close.")
+
+				err := c.conn.Close()
+				if err != nil {
+					log.Println("Failed to close WebSocket connection:", err.Error())
+				}
+		}
+
+		c.conn = nil
 	}
 }
 

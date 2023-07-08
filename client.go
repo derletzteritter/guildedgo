@@ -1,6 +1,9 @@
 package guildedgo
 
-import "net/http"
+import (
+	"github.com/gorilla/websocket"
+	"net/http"
+)
 
 const (
 	guildedApi = "https://www.guilded.gg/api/v1"
@@ -10,6 +13,7 @@ type Client struct {
 	Token    string
 	ServerID string
 	client   *http.Client
+	conn *websocket.Conn
 
 	Channel        ChannelService
 	Members        MembersService
