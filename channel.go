@@ -312,3 +312,25 @@ func (service *channelService) DeleteChannelMessage(channelId string, messageId 
 
 	return nil
 }
+
+func (service *channelService) ArchiveChannel(channelId string) error {
+	endpoint := service.endpoints.Get(channelId) + "/archive"
+
+	err := service.client.PutRequestV2(endpoint, nil, nil)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to archive channel. Error: \n%v", err.Error()))
+	}
+
+	return nil
+}
+
+func (service *channelService) RestoreChannel(channelId string) error {
+	endpoint := service.endpoints.Get(channelId) + "/archive"
+
+	_, err := service.client.DeleteRequest(endpoint)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to restore channel. Error: \n%v", err.Error()))
+	}
+
+	return nil
+}

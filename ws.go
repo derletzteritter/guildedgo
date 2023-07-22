@@ -116,14 +116,14 @@ func (c *Client) Close() {
 			if err != nil {
 				log.Println("Failed to close WebSocket connection:", err.Error())
 			}
-			case <-time.After(time.Second):
-				// Timeout for graceful termination reached, force close the connection
-				log.Println("Timeout reached for graceful termination. Forcing connection close.")
+		case <-time.After(time.Second):
+			// Timeout for graceful termination reached, force close the connection
+			log.Println("Timeout reached for graceful termination. Forcing connection close.")
 
-				err := c.conn.Close()
-				if err != nil {
-					log.Println("Failed to close WebSocket connection:", err.Error())
-				}
+			err := c.conn.Close()
+			if err != nil {
+				log.Println("Failed to close WebSocket connection:", err.Error())
+			}
 		}
 
 		c.conn = nil
@@ -149,6 +149,8 @@ func init() {
 	interfaces["ServerChannelDeleted"] = &ServerChannelDeleted{}
 	interfaces["ServerWebhookCreated"] = &ServerWebhookCreated{}
 	interfaces["ServerWebhookUpdated"] = &ServerWebhookUpdated{}
+	interfaces["ChannelArchived"] = &ChannelArchived{}
+	interfaces["ChannelRestored"] = &ChannelRestored{}
 	interfaces["DocCreated"] = &DocCreated{}
 	interfaces["DocUpdated"] = &DocUpdated{}
 	interfaces["DocDeleted"] = &DocDeleted{}

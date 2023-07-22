@@ -241,3 +241,13 @@ type ForumTopicCommentDeleted struct {
 	ServerID          string `json:"serverId"`
 	ForumTopicComment `json:"forumTopicComment"`
 }
+
+type ChannelArchived struct {
+	ServerID string        `json:"serverId"`
+	Channel  ServerChannel `json:"channel"`
+}
+
+type ChannelRestored struct {
+	ServerID string        `json:"serverId"`
+	Channel  ServerChannel `json:"channel"`
+}
