@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/itschip/guildedgo/pkg/channel"
-	"github.com/itschip/guildedgo/pkg/client"
 )
 
 const (
@@ -16,17 +14,14 @@ const (
 
 type Client struct {
 	sync.RWMutex
-	wsMutex sync.Mutex
-
-	Token     string
-	ServerID  string
-	client    *http.Client
-	conn      *websocket.Conn
-	interrupt chan os.Signal
-	listening chan struct{}
-
+	wsMutex        sync.Mutex
+	Token          string
+	ServerID       string
+	client         *http.Client
+	conn           *websocket.Conn
+	interrupt      chan os.Signal
+	listening      chan struct{}
 	Channel        ChannelService
-	Channel2       channel.Service
 	Members        MembersService
 	Roles          RoleService
 	Server         ServerService
@@ -41,10 +36,10 @@ type Client struct {
 	Docs           DocsService
 	Socials        SocialsService
 	Announcements  AnnouncementService
+	Category       CategoryService
 	Users          UserService
-
-	events   map[string][]Event
-	commands map[string]Command
+	events         map[string][]Event
+	commands       map[string]Command
 }
 
 type Event struct {
@@ -80,31 +75,9 @@ func NewClient(config *Config) *Client {
 	c.Socials = &socialsService{client: c}
 	c.Announcements = &announcementService{client: c}
 	c.Users = &userService{client: c}
+	c.Category = &categoryService{client: c}
 
 	c.events = make(map[string][]Event)
-
-	return c
-}
-
-type Client2 struct {
-	client  client.Client
-	Channel channel.Service
-}
-
-func NewClientWithServices(config *Config, services ...any) *Client2 {
-	c := &Client2{
-		client: client.Client{
-			Token:    config.Token,
-			ServerID: config.ServerID,
-		},
-	}
-
-	for _, service := range services {
-		switch service.(type) {
-		case channel.Service:
-			c.Channel = service.(channel.Service)
-		}
-	}
 
 	return c
 }
