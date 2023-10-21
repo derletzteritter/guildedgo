@@ -36,16 +36,20 @@ func (r *Http) PerformRequest(method, url string, data any) (io.ReadCloser, erro
 		return nil, ErrMarshal
 	}
 
-	reader := bytes.NewReader(marshalData)
+	var buf io.Reader
+	if data == nil {
+		buf = nil
+	} else {
+		buf = bytes.NewBuffer(marshalData)
+	}
 
-	req, err := nethttp.NewRequestWithContext(ctx, method, url, reader)
+	req, err := nethttp.NewRequestWithContext(ctx, method, url, buf)
 	if err != nil {
 		return nil, ErrNewRequest
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+r.Token)
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &nethttp.Client{}
 	resp, err := client.Do(req)

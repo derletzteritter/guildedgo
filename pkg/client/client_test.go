@@ -24,7 +24,7 @@ func TestSendMessage(t *testing.T) {
 		ServerID: serverID,
 	})
 
-	msg, err := message.Send(c, "", message.MessageParams{
+	msg, err := message.Send(c, "08dfae9c-6ecb-44b7-86ad-6812b495dd0c", message.MessageParams{
 		Content: "Hello, world!",
 	})
 	if err != nil {
@@ -36,8 +36,6 @@ func TestSendMessage(t *testing.T) {
 }
 
 func TestGetMessages(t *testing.T) {
-	t.Skip("Skipping test as api is broken")
-
 	err := godotenv.Load("../../.env")
 	if err != nil {
 		t.Error(err)
@@ -52,7 +50,7 @@ func TestGetMessages(t *testing.T) {
 		ServerID: serverID,
 	})
 
-	msg, err := message.Get(c, "", "")
+	msg, err := message.Get(c, "08dfae9c-6ecb-44b7-86ad-6812b495dd0c", "b593fe6c-73c5-41b5-bb2a-6f583eccc098")
 	if err != nil {
 		t.Error(err)
 	}
