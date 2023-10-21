@@ -76,7 +76,7 @@ func (c *Client) onEvent(msg []byte) {
 
 	// Is this smart? Probably not.
 	eventsCB := c.events[re.T]
-	for _, callback := range eventsCB {
-		callback.Callback(c, eventType)
+	for _, event := range eventsCB {
+		event.Callback(c, eventType)
 	}
 }

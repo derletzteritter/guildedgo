@@ -68,8 +68,6 @@ func (c *Client) Open() {
 		return
 	}
 
-	fmt.Println(event.HeartbeatInterval)
-
 	c.listening = make(chan struct{})
 
 	go c.heartbeat(c.conn, c.listening, event.HeartbeatInterval)
@@ -91,8 +89,6 @@ func (c *Client) listen(wsConn *websocket.Conn, listening <-chan struct{}) {
 			}
 
 			msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
-
-			fmt.Println(string(msg))
 
 			c.onEvent(msg)
 		}
