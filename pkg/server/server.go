@@ -42,9 +42,9 @@ const (
 	TypeOther        string = "other"
 )
 
-func Get(c *client.Client, serverID string) (Server, error) {
+func Get(c *client.Client) (Server, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID
 
 	var v serverResponse
 

@@ -24,7 +24,7 @@ func TestGetGroups(t *testing.T) {
 		Token:    token,
 	})
 
-	groups, err := group.Get(c, serverID)
+	groups, err := group.Get(c)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

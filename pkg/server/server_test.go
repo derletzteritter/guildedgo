@@ -24,7 +24,7 @@ func TestGetServer(t *testing.T) {
 		Token:    token,
 	})
 
-	s, err := server.Get(c, serverID)
+	s, err := server.Get(c)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

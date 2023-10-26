@@ -36,9 +36,9 @@ type CreateParams struct {
 	IsPublic    bool   `json:"isPublic,omitempty"`
 }
 
-func Create(c *client.Client, serverID string, params CreateParams) (Group, error) {
+func Create(c *client.Client, params CreateParams) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID + "/groups"
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups"
 
 	var v struct {
 		Group `json:"group"`
@@ -58,9 +58,9 @@ func Create(c *client.Client, serverID string, params CreateParams) (Group, erro
 }
 
 // Get returns all groups in a server.
-func Get(c *client.Client, serverID string) ([]Group, error) {
+func Get(c *client.Client) ([]Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID + "/groups"
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups"
 
 	var v struct {
 		Groups []Group `json:"groups"`
@@ -80,9 +80,9 @@ func Get(c *client.Client, serverID string) ([]Group, error) {
 }
 
 // Find returns a group in a server.
-func Find(c *client.Client, serverID, groupID string) (Group, error) {
+func Find(c *client.Client, groupID string) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID + "/groups/" + groupID
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
 
 	var v struct {
 		Group `json:"group"`
@@ -101,9 +101,9 @@ func Find(c *client.Client, serverID, groupID string) (Group, error) {
 	return v.Group, nil
 }
 
-func Update(c *client.Client, serverID, groupID string, params CreateParams) (Group, error) {
+func Update(c *client.Client, groupID string, params CreateParams) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID + "/groups/" + groupID
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
 
 	var v struct {
 		Group `json:"group"`
@@ -122,9 +122,9 @@ func Update(c *client.Client, serverID, groupID string, params CreateParams) (Gr
 	return v.Group, nil
 }
 
-func Delete(c *client.Client, serverID, groupID string) error {
+func Delete(c *client.Client, groupID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + serverID + "/groups/" + groupID
+	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
 
 	_, err = c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
