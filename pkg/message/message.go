@@ -137,7 +137,7 @@ type ChatEmbedField struct {
 	Inline bool `json:"inline,omitempty"`
 }
 
-type MessageObject struct {
+type Object struct {
 	// If set, this message will only be seen by those mentioned or replied to
 	IsPrivate bool `json:"isPrivate,omitempty"`
 
@@ -175,7 +175,7 @@ type AllMessagesResponse struct {
 	Messages []ChatMessage `json:"messages"`
 }
 
-type MessageParams struct {
+type Params struct {
 	// If set, this message will only be seen by those mentioned or replied to
 	IsPrivate bool `json:"isPrivate,omitempty"`
 
@@ -195,7 +195,7 @@ type MessageParams struct {
 }
 
 // Send sends a message to a channel.
-func Send(c *client.Client, channelID string, params MessageParams) (ChatMessage, error) {
+func Send(c *client.Client, channelID string, params Params) (ChatMessage, error) {
 	endpoint := client.GuildedApi + "/channels/" + channelID + "/messages"
 
 	var v MessageResponse
