@@ -1,10 +1,20 @@
 package client
 
 import (
+	"github.com/gorilla/websocket"
 	"github.com/itschip/guildedgo/internal/http"
+	"os"
+	"sync"
 )
 
 type Client struct {
+	sync.RWMutex
+	wsMutex   sync.Mutex
+	conn      *websocket.Conn
+	interrupt chan os.Signal
+	listening chan struct{}
+	events    map[string][]event
+
 	ServerID string
 	Http     *http.Http
 }

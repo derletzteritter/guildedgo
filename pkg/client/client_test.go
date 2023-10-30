@@ -24,7 +24,7 @@ func TestSendMessage(t *testing.T) {
 		ServerID: serverID,
 	})
 
-	msg, err := message.Send(c, "08dfae9c-6ecb-44b7-86ad-6812b495dd0c", message.MessageParams{
+	msg, err := message.Send(c, "08dfae9c-6ecb-44b7-86ad-6812b495dd0c", message.Params{
 		Content: "Hello, world!",
 	})
 	if err != nil {
