@@ -11,13 +11,13 @@ type event struct {
 	Type     *interface{}
 }
 
-func (c *Client) On(e string, callback func(client *Client, v any)) {
-	c.events[e] = append(c.events[e], event{
+func (r *Client) On(e string, callback func(client *Client, v any)) {
+	r.events[e] = append(r.events[e], event{
 		Callback: callback,
 	})
 }
 
-func (c *Client) onEvent(msg []byte) {
+func (r *Client) onEvent(msg []byte) {
 	var err error
 	reader := bytes.NewBuffer(msg)
 
@@ -36,8 +36,8 @@ func (c *Client) onEvent(msg []byte) {
 	}
 
 	// Is this smart? Probably not.
-	eventsCB := c.events[re.T]
+	eventsCB := r.events[re.T]
 	for _, event := range eventsCB {
-		event.Callback(c, eventType)
+		event.Callback(r, eventType)
 	}
 }

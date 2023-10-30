@@ -23,7 +23,7 @@ func TestCreate(t *testing.T) {
 		Token:    token,
 	})
 
-	cat, err := category.Create(c, &category.CreateParams{
+	cat, err := category.Create(c, serverID, &category.CreateParams{
 		Name: "Test Category",
 	})
 

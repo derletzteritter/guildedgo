@@ -53,55 +53,55 @@ var (
 	space   = []byte{' '}
 )
 
-func (c *Client) Open() {
+func (r *Client) Open() {
 	var err error
 
-	c.Lock()
-	defer c.Unlock()
+	r.Lock()
+	defer r.Unlock()
 
-	if c.conn != nil {
+	if r.conn != nil {
 		return
 	}
 
 	header := http.Header{}
-	header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Http.Token))
+	header.Add("Authorization", fmt.Sprintf("Bearer %s", r.Token))
 
-	c.conn, _, err = websocket.DefaultDialer.Dial("wss://www.guilded.gg/websocket/v1", header)
+	r.conn, _, err = websocket.DefaultDialer.Dial("wss://www.guilded.gg/websocket/v1", header)
 	if err != nil {
 		log.Fatalln("Failed to connect to websocket: ", err.Error())
 	}
 
-	c.conn.SetCloseHandler(func(code int, text string) error {
+	r.conn.SetCloseHandler(func(code int, text string) error {
 		return nil
 	})
 
 	defer func() {
 		if err != nil {
-			c.conn.Close()
-			c.conn = nil
+			r.conn.Close()
+			r.conn = nil
 		}
 	}()
 
-	_, m, err := c.conn.ReadMessage()
+	_, m, err := r.conn.ReadMessage()
 	if err != nil {
 		log.Fatalln("Failed to read message: ", err.Error())
 	}
 	m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
 
-	event := c.onWelcomeMessage(m)
+	event := r.onWelcomeMessage(m)
 	if event == nil {
 		return
 	}
 
-	c.listening = make(chan struct{})
+	r.listening = make(chan struct{})
 
-	go c.heartbeat(c.conn, c.listening, event.HeartbeatInterval)
-	go c.listen(c.conn, c.listening)
+	go r.heartbeat(r.conn, r.listening, event.HeartbeatInterval)
+	go r.listen(r.conn, r.listening)
 
 	log.Println("Listening for messages in main")
 }
 
-func (c *Client) listen(wsConn *websocket.Conn, listening <-chan struct{}) {
+func (r *Client) listen(wsConn *websocket.Conn, listening <-chan struct{}) {
 	for {
 		select {
 		case <-listening:
@@ -115,12 +115,12 @@ func (c *Client) listen(wsConn *websocket.Conn, listening <-chan struct{}) {
 
 			msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 
-			c.onEvent(msg)
+			r.onEvent(msg)
 		}
 	}
 }
 
-func (c *Client) heartbeat(wsConn *websocket.Conn, listening <-chan struct{}, intervalMs int) {
+func (r *Client) heartbeat(wsConn *websocket.Conn, listening <-chan struct{}, intervalMs int) {
 	ticker := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
 	defer ticker.Stop()
 
@@ -138,21 +138,21 @@ func (c *Client) heartbeat(wsConn *websocket.Conn, listening <-chan struct{}, in
 	}
 }
 
-func (c *Client) Close() {
-	c.Lock()
+func (r *Client) Close() {
+	r.Lock()
 
-	if c.listening != nil {
+	if r.listening != nil {
 		log.Println("Closing listening channel")
-		close(c.listening)
-		c.listening = nil
+		close(r.listening)
+		r.listening = nil
 	}
 
-	if c.conn != nil {
+	if r.conn != nil {
 		log.Println("Closing websocket connection")
 
-		c.wsMutex.Lock()
-		err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		c.wsMutex.Unlock()
+		r.wsMutex.Lock()
+		err := r.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		r.wsMutex.Unlock()
 		if err != nil {
 			log.Println("Failed to write close message: ", err.Error())
 		}
@@ -161,22 +161,22 @@ func (c *Client) Close() {
 
 		log.Println("Closing websocket connection")
 
-		err = c.conn.Close()
+		err = r.conn.Close()
 		if err != nil {
 			log.Println("Failed to close websocket connection: ", err.Error())
 		}
 
-		c.conn = nil
+		r.conn = nil
 	}
 
-	c.Unlock()
+	r.Unlock()
 
 	log.Println("Closed websocket connection")
 
 	return
 }
 
-func (c *Client) onWelcomeMessage(msg []byte) *WelcomeOP {
+func (r *Client) onWelcomeMessage(msg []byte) *WelcomeOP {
 	var err error
 	reader := bytes.NewBuffer(msg)
 

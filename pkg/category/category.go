@@ -2,9 +2,17 @@ package category
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+)
 
-	"github.com/itschip/guildedgo/pkg/client"
+type Client interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
+
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
 )
 
 type Category struct {
@@ -25,19 +33,19 @@ type UpdateParams struct {
 	Name string `json:"name"`
 }
 
-func Create(c *client.Client, params *CreateParams) (Category, error) {
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/categories"
+func Create(c Client, serverID string, params *CreateParams) (Category, error) {
+	endpoint := guildedApi + "/servers/" + serverID + "/categories"
 
 	var v struct {
 		Category `json:"category"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPost, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPost, endpoint, params)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to create category: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to decode category response: %w", err)
 	}
@@ -45,19 +53,19 @@ func Create(c *client.Client, params *CreateParams) (Category, error) {
 	return v.Category, nil
 }
 
-func Read(c *client.Client, categoryID string) (Category, error) {
-	endpoint := client.GuildedApi + "/servers" + c.ServerID + "/categories/" + categoryID
+func Read(c Client, serverID string, categoryID string) (Category, error) {
+	endpoint := guildedApi + "/servers" + serverID + "/categories/" + categoryID
 
 	var v struct {
 		Category `json:"category"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to get category: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to decode category response: %w", err)
 	}
@@ -65,19 +73,19 @@ func Read(c *client.Client, categoryID string) (Category, error) {
 	return v.Category, nil
 }
 
-func Update(c *client.Client, categoryID int, params *UpdateParams) (Category, error) {
-	endpoint := fmt.Sprintf("%s/servers/%s/categories/%d", client.GuildedApi, c.ServerID, categoryID)
+func Update(c Client, serverID string, categoryID int, params *UpdateParams) (Category, error) {
+	endpoint := fmt.Sprintf("%s/servers/%s/categories/%d", guildedApi, serverID, categoryID)
 
 	var v struct {
 		Category `json:"category"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPatch, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPatch, endpoint, params)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to update category: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to decode category response: %w", err)
 	}
@@ -85,19 +93,19 @@ func Update(c *client.Client, categoryID int, params *UpdateParams) (Category, e
 	return v.Category, nil
 }
 
-func Delete(c *client.Client, categoryID int) (Category, error) {
-	endpoint := fmt.Sprintf("%s/servers/%s/categories/%d", client.GuildedApi, c.ServerID, categoryID)
+func Delete(c Client, serverID string, categoryID int) (Category, error) {
+	endpoint := fmt.Sprintf("%s/servers/%s/categories/%d", guildedApi, serverID, categoryID)
 
 	var v struct {
 		Category `json:"category"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to delete category: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Category{}, fmt.Errorf("failed to decode category response: %w", err)
 	}

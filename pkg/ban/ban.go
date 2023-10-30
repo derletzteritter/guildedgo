@@ -2,9 +2,18 @@ package ban
 
 import (
 	"fmt"
-	"github.com/itschip/guildedgo/pkg/client"
 	"github.com/itschip/guildedgo/pkg/user"
+	"io"
 	"net/http"
+)
+
+type Client interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
+
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
 )
 
 // Ban is the ServerMemberBan model
@@ -20,20 +29,20 @@ type CreateParams struct {
 	Reason string `json:"reason"`
 }
 
-func Create(c *client.Client, userID string, params *CreateParams) (*Ban, error) {
+func Create(c Client, serverID, userID string, params *CreateParams) (*Ban, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/bans/" + userID
+	endpoint := guildedApi + "/servers/" + serverID + "/bans/" + userID
 
 	var v struct {
 		Ban `json:"serverMemberBan"`
 	}
 
-	res, err := c.Http.PerformRequest(http.MethodPost, endpoint, params)
+	res, err := c.PerformRequest(http.MethodPost, endpoint, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to ban member: %w", err)
 	}
 
-	err = c.Http.Decode(res, &v)
+	err = c.Decode(res, &v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -42,20 +51,20 @@ func Create(c *client.Client, userID string, params *CreateParams) (*Ban, error)
 }
 
 // Find returns the ban for the given user ID
-func Find(c *client.Client, userID string) (*Ban, error) {
+func Find(c Client, serverID, userID string) (*Ban, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/bans/" + userID
+	endpoint := guildedApi + "/servers/" + serverID + "/bans/" + userID
 
 	var v struct {
 		Ban `json:"serverMemberBan"`
 	}
 
-	res, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	res, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ban: %w", err)
 	}
 
-	err = c.Http.Decode(res, &v)
+	err = c.Decode(res, &v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -64,16 +73,16 @@ func Find(c *client.Client, userID string) (*Ban, error) {
 }
 
 // Delete deletes the ban for the given user ID
-func Delete(c *client.Client, userID string) error {
+func Delete(c Client, serverID, userID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/bans/" + userID
+	endpoint := guildedApi + "/servers/" + serverID + "/bans/" + userID
 
-	res, err := c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	res, err := c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete ban: %w", err)
 	}
 
-	err = c.Http.Decode(res, nil)
+	err = c.Decode(res, nil)
 	if err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -82,20 +91,20 @@ func Delete(c *client.Client, userID string) error {
 }
 
 // Get returns a list of bans for the server
-func Get(c *client.Client) ([]Ban, error) {
+func Get(c Client, serverID string) ([]Ban, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/bans"
+	endpoint := guildedApi + "/servers/" + serverID + "/bans"
 
 	var v struct {
 		Bans []Ban `json:"serverMemberBan"`
 	}
 
-	res, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	res, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bans: %w", err)
 	}
 
-	err = c.Http.Decode(res, &v)
+	err = c.Decode(res, &v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}

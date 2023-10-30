@@ -1,9 +1,17 @@
 package message
 
 import (
+	"io"
 	"net/http"
+)
 
-	"github.com/itschip/guildedgo/pkg/client"
+type MessageClient interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
+
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
 )
 
 type ChatMessage struct {
@@ -195,17 +203,17 @@ type Params struct {
 }
 
 // Send sends a message to a channel.
-func Send(c *client.Client, channelID string, params Params) (ChatMessage, error) {
-	endpoint := client.GuildedApi + "/channels/" + channelID + "/messages"
+func Send(c MessageClient, channelID string, params Params) (ChatMessage, error) {
+	endpoint := guildedApi + "/channels/" + channelID + "/messages"
 
 	var v MessageResponse
 
-	body, err := c.Http.PerformRequest(http.MethodPost, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPost, endpoint, params)
 	if err != nil {
 		return ChatMessage{}, err
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return ChatMessage{}, err
 	}
@@ -213,17 +221,17 @@ func Send(c *client.Client, channelID string, params Params) (ChatMessage, error
 	return v.Message, nil
 }
 
-func Get(c *client.Client, channelID, messageID string) (ChatMessage, error) {
-	endpoint := client.GuildedApi + "/channels/" + channelID + "/messages/" + messageID
+func Get(c MessageClient, channelID, messageID string) (ChatMessage, error) {
+	endpoint := guildedApi + "/channels/" + channelID + "/messages/" + messageID
 
 	var v getMessageResponse
 
-	body, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return ChatMessage{}, err
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return ChatMessage{}, err
 	}

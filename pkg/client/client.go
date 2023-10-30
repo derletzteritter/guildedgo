@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/itschip/guildedgo/internal/http"
 	"os"
 	"sync"
 )
@@ -16,7 +15,7 @@ type Client struct {
 	events    map[string][]event
 
 	ServerID string
-	Http     *http.Http
+	Token    string
 }
 
 type Config struct {
@@ -31,8 +30,6 @@ const (
 func New(config Config) *Client {
 	return &Client{
 		ServerID: config.ServerID,
-		Http: &http.Http{
-			Token: config.Token,
-		},
+		Token:    config.Token,
 	}
 }

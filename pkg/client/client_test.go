@@ -1,10 +1,10 @@
 package client_test
 
 import (
+	"github.com/itschip/guildedgo/pkg/client"
 	"os"
 	"testing"
 
-	"github.com/itschip/guildedgo/pkg/client"
 	"github.com/itschip/guildedgo/pkg/message"
 	"github.com/joho/godotenv"
 )
@@ -25,7 +25,7 @@ func TestSendMessage(t *testing.T) {
 	})
 
 	msg, err := message.Send(c, "08dfae9c-6ecb-44b7-86ad-6812b495dd0c", message.Params{
-		Content: "Hello, world!",
+		Content: "Hello, world again!",
 	})
 	if err != nil {
 		t.Error(err)

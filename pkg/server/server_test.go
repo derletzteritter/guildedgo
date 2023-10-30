@@ -1,10 +1,10 @@
 package server_test
 
 import (
+	"github.com/itschip/guildedgo/pkg/client"
 	"os"
 	"testing"
 
-	"github.com/itschip/guildedgo/pkg/client"
 	"github.com/itschip/guildedgo/pkg/server"
 	"github.com/joho/godotenv"
 )
@@ -24,7 +24,7 @@ func TestGetServer(t *testing.T) {
 		Token:    token,
 	})
 
-	s, err := server.Get(c)
+	s, err := server.Get(c, serverID)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

@@ -2,9 +2,17 @@ package group
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+)
 
-	"github.com/itschip/guildedgo/pkg/client"
+type Client interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
+
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
 )
 
 // TODO: Add to socket interfaces
@@ -36,20 +44,20 @@ type CreateParams struct {
 	IsPublic    bool   `json:"isPublic,omitempty"`
 }
 
-func Create(c *client.Client, params CreateParams) (Group, error) {
+func Create(c Client, serverID string, params CreateParams) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups"
+	endpoint := guildedApi + "/servers/" + serverID + "/groups"
 
 	var v struct {
 		Group `json:"group"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPost, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPost, endpoint, params)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to create group: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to decode group response: %w", err)
 	}
@@ -58,20 +66,20 @@ func Create(c *client.Client, params CreateParams) (Group, error) {
 }
 
 // Get returns all groups in a server.
-func Get(c *client.Client) ([]Group, error) {
+func Get(c Client, serverID string) ([]Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups"
+	endpoint := guildedApi + "/servers/" + serverID + "/groups"
 
 	var v struct {
 		Groups []Group `json:"groups"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get groups: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode groups response: %w", err)
 	}
@@ -80,20 +88,20 @@ func Get(c *client.Client) ([]Group, error) {
 }
 
 // Find returns a group in a server.
-func Find(c *client.Client, groupID string) (Group, error) {
+func Find(c Client, serverID, groupID string) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
+	endpoint := guildedApi + "/servers/" + serverID + "/groups/" + groupID
 
 	var v struct {
 		Group `json:"group"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to find group: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to decode group response: %w", err)
 	}
@@ -101,20 +109,20 @@ func Find(c *client.Client, groupID string) (Group, error) {
 	return v.Group, nil
 }
 
-func Update(c *client.Client, groupID string, params CreateParams) (Group, error) {
+func Update(c Client, serverID, groupID string, params CreateParams) (Group, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
+	endpoint := guildedApi + "/servers/" + serverID + "/groups/" + groupID
 
 	var v struct {
 		Group `json:"group"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPatch, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPatch, endpoint, params)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to update group: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return Group{}, fmt.Errorf("failed to decode group response: %w", err)
 	}
@@ -122,11 +130,11 @@ func Update(c *client.Client, groupID string, params CreateParams) (Group, error
 	return v.Group, nil
 }
 
-func Delete(c *client.Client, groupID string) error {
+func Delete(c Client, serverID, groupID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/groups/" + groupID
+	endpoint := guildedApi + "/servers/" + serverID + "/groups/" + groupID
 
-	_, err = c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	_, err = c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
 	}

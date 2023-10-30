@@ -23,7 +23,7 @@ func TestUpdateNickname(t *testing.T) {
 		Token:    token,
 	})
 
-	nickname, err := member.UpdateNickname(c, "", "funnyguy123")
+	nickname, err := member.UpdateNickname(c, serverID, "", "funnyguy123")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

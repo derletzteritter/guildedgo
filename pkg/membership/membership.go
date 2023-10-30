@@ -2,15 +2,24 @@ package membership
 
 import (
 	"fmt"
-	"github.com/itschip/guildedgo/pkg/client"
+	"io"
 	"net/http"
 	"strconv"
 )
 
-func AddGroupMember(c *client.Client, groupID, userID string) error {
-	endpoint := client.GuildedApi + "/groups/" + groupID + "/members/" + userID
+type Client interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
 
-	_, err := c.Http.PerformRequest(http.MethodPut, endpoint, nil)
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
+)
+
+func AddGroupMember(c Client, groupID, userID string) error {
+	endpoint := guildedApi + "/groups/" + groupID + "/members/" + userID
+
+	_, err := c.PerformRequest(http.MethodPut, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("error adding member to group: %w", err)
 	}
@@ -18,10 +27,10 @@ func AddGroupMember(c *client.Client, groupID, userID string) error {
 	return nil
 }
 
-func RemoveGroupMember(c *client.Client, groupID, userID string) error {
-	endpoint := client.GuildedApi + "/groups/" + groupID + "/members/" + userID
+func RemoveGroupMember(c Client, groupID, userID string) error {
+	endpoint := guildedApi + "/groups/" + groupID + "/members/" + userID
 
-	_, err := c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	_, err := c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("error removing member from group: %w", err)
 	}
@@ -29,10 +38,10 @@ func RemoveGroupMember(c *client.Client, groupID, userID string) error {
 	return nil
 }
 
-func AssignRole(c *client.Client, userID string, roleID int) error {
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/members/" + userID + "/roles/" + strconv.Itoa(roleID)
+func AssignRole(c Client, serverID, userID string, roleID int) error {
+	endpoint := guildedApi + "/servers/" + serverID + "/members/" + userID + "/roles/" + strconv.Itoa(roleID)
 
-	_, err := c.Http.PerformRequest(http.MethodPut, endpoint, nil)
+	_, err := c.PerformRequest(http.MethodPut, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("error assigning role to member: %w", err)
 	}
@@ -40,10 +49,10 @@ func AssignRole(c *client.Client, userID string, roleID int) error {
 	return nil
 }
 
-func RemoveRole(c *client.Client, userID string, roleID int) error {
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/members/" + userID + "/roles/" + strconv.Itoa(roleID)
+func RemoveRole(c Client, serverID, userID string, roleID int) error {
+	endpoint := guildedApi + "/servers/" + serverID + "/members/" + userID + "/roles/" + strconv.Itoa(roleID)
 
-	_, err := c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	_, err := c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("error removing role from member: %w", err)
 	}
@@ -51,18 +60,18 @@ func RemoveRole(c *client.Client, userID string, roleID int) error {
 	return nil
 }
 
-func GetRoles(c *client.Client, userID string) ([]int, error) {
+func GetRoles(c Client, serverID, userID string) ([]int, error) {
 	var err error
-	endpoint := client.GuildedApi + "/servers/" + c.ServerID + "/members/" + userID + "/roles"
+	endpoint := guildedApi + "/servers/" + serverID + "/members/" + userID + "/roles"
 
 	var v []int
 
-	res, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	res, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error getting roles: %w", err)
 	}
 
-	err = c.Http.Decode(res, &v)
+	err = c.Decode(res, &v)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding roles: %w", err)
 	}

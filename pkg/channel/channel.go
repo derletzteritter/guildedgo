@@ -2,9 +2,17 @@ package channel
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+)
 
-	"github.com/itschip/guildedgo/pkg/client"
+type Client interface {
+	PerformRequest(method, url string, data any) (io.ReadCloser, error)
+	Decode(body io.ReadCloser, v any) error
+}
+
+const (
+	guildedApi = "https://www.guilded.gg/api/v1"
 )
 
 type ServerChannel struct {
@@ -121,20 +129,20 @@ type UpdateParams struct {
 	Visibility Visibility `json:"visibility,omitempty"`
 }
 
-func Create(c *client.Client, params *CreateParams) (ServerChannel, error) {
+func Create(c Client, params *CreateParams) (ServerChannel, error) {
 	var err error
-	endpoint := client.GuildedApi + "/channels"
+	endpoint := guildedApi + "/channels"
 
 	var v struct {
 		Channel ServerChannel `json:"channel"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPost, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPost, endpoint, params)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to create channel: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to decode channel response: %w", err)
 	}
@@ -142,20 +150,20 @@ func Create(c *client.Client, params *CreateParams) (ServerChannel, error) {
 	return v.Channel, nil
 }
 
-func Get(c *client.Client, channelID string) (ServerChannel, error) {
+func Get(c Client, channelID string) (ServerChannel, error) {
 	var err error
-	endpoint := client.GuildedApi + "/channels/" + channelID
+	endpoint := guildedApi + "/channels/" + channelID
 
 	var v struct {
 		Channel ServerChannel `json:"channel"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodGet, endpoint, nil)
+	body, err := c.PerformRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to get channel: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to decode channel response: %w", err)
 	}
@@ -163,20 +171,20 @@ func Get(c *client.Client, channelID string) (ServerChannel, error) {
 	return v.Channel, nil
 }
 
-func Update(c *client.Client, channelID string, params *UpdateParams) (ServerChannel, error) {
+func Update(c Client, channelID string, params *UpdateParams) (ServerChannel, error) {
 	var err error
-	endpoint := client.GuildedApi + "/channels/" + channelID
+	endpoint := guildedApi + "/channels/" + channelID
 
 	var v struct {
 		Channel ServerChannel `json:"channel"`
 	}
 
-	body, err := c.Http.PerformRequest(http.MethodPatch, endpoint, params)
+	body, err := c.PerformRequest(http.MethodPatch, endpoint, params)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to update channel: %w", err)
 	}
 
-	err = c.Http.Decode(body, &v)
+	err = c.Decode(body, &v)
 	if err != nil {
 		return ServerChannel{}, fmt.Errorf("failed to decode channel response: %w", err)
 	}
@@ -184,11 +192,11 @@ func Update(c *client.Client, channelID string, params *UpdateParams) (ServerCha
 	return v.Channel, nil
 }
 
-func Delete(c *client.Client, channelID string) error {
+func Delete(c Client, channelID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/channels/" + channelID
+	endpoint := guildedApi + "/channels/" + channelID
 
-	_, err = c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	_, err = c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete channel: %w", err)
 	}
@@ -196,11 +204,11 @@ func Delete(c *client.Client, channelID string) error {
 	return nil
 }
 
-func Archive(c *client.Client, channelID string) error {
+func Archive(c Client, channelID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/channels/" + channelID + "/archive"
+	endpoint := guildedApi + "/channels/" + channelID + "/archive"
 
-	_, err = c.Http.PerformRequest(http.MethodPut, endpoint, nil)
+	_, err = c.PerformRequest(http.MethodPut, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to archive channel: %w", err)
 	}
@@ -208,11 +216,11 @@ func Archive(c *client.Client, channelID string) error {
 	return nil
 }
 
-func Restore(c *client.Client, channelID string) error {
+func Restore(c Client, channelID string) error {
 	var err error
-	endpoint := client.GuildedApi + "/channels/" + channelID + "/archive"
+	endpoint := guildedApi + "/channels/" + channelID + "/archive"
 
-	_, err = c.Http.PerformRequest(http.MethodDelete, endpoint, nil)
+	_, err = c.PerformRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to restore channel: %w", err)
 	}

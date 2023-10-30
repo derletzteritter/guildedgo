@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"bytes"
@@ -10,10 +10,6 @@ import (
 	nethttp "net/http"
 	"time"
 )
-
-type Http struct {
-	Token string
-}
 
 type apiError struct {
 	Code    string          `json:"code"`
@@ -27,7 +23,7 @@ var (
 	ErrTimeout    = errors.New("request timed out")
 )
 
-func (r *Http) PerformRequest(method, url string, data any) (io.ReadCloser, error) {
+func (r *Client) PerformRequest(method, url string, data any) (io.ReadCloser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -79,6 +75,6 @@ func (r *Http) PerformRequest(method, url string, data any) (io.ReadCloser, erro
 	}
 }
 
-func (*Http) Decode(data io.ReadCloser, v any) error {
+func (r *Client) Decode(data io.ReadCloser, v any) error {
 	return json.NewDecoder(data).Decode(v)
 }
