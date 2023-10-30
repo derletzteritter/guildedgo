@@ -31,6 +31,6 @@ func New(config Config) *Client {
 	return &Client{
 		ServerID: config.ServerID,
 		Token:    config.Token,
-		events:   make(map[string][]event),``
+		events:   make(map[string][]event),
 	}
 }
