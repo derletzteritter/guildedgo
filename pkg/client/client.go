@@ -13,6 +13,7 @@ type Client struct {
 	interrupt chan os.Signal
 	listening chan struct{}
 	events    map[string][]event
+	commands  map[string]Command
 
 	ServerID string
 	Token    string
