@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
+	"reflect"
 )
 
 type event struct {
@@ -11,8 +12,10 @@ type event struct {
 	Type     *interface{}
 }
 
-func (r *Client) On(e string, callback func(client *Client, v any)) {
-	r.events[e] = append(r.events[e], event{
+func (r *Client) On(e any, callback func(client *Client, v any)) {
+	eventName := reflect.TypeOf(e).String()
+
+	r.events[eventName] = append(r.events[eventName], event{
 		Callback: callback,
 	})
 }
